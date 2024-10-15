@@ -1,5 +1,5 @@
 #!groovy
-@Library('jenkinsSharedLib@master') _
+@Library('jenkinsSharedLib@main') _
 
 def alljob = JOB_NAME.tokenize('/') as String[]
 def proj_name = alljob[2]
