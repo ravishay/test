@@ -1,0 +1,60 @@
+#!groovy
+@Library('jenkinsSharedLib') _
+
+def alljob = JOB_NAME.tokenize('/') as String[]
+def proj_name = alljob[2]
+def folder_name = alljob[1].toLowerCase()
+def git_commiter
+def version = 0.0
+
+def cloud_name = "k8s"
+def pod_template = "podTemplates/testoPodTemplate.yaml" 
+
+// Cred
+def service_account = "jenkins"
+def globalSettings
+
+pipeline {
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+    }
+    agent {
+        kubernetes {
+            cloud "${cloud_name}"
+            yaml libraryResource("${pod_template}")
+        }
+    }
+    environment {
+        SKIP_CI = 'false'
+        PUSH_IMAGE = 'false'
+    }
+
+    stages {
+        stage('Init Params') {
+            steps {
+                script {
+                    git_commiter = sh(script:"git --no-pager show -s --format='%an' $GIT_COMMIT", returnStdout: true).trim()
+                    def skip_ci = sh(script: "git log -1 --pretty=%B | grep '\\[ci-skip\\]*'", returnStatus: true)
+                    if (skip_ci == 0) {
+                        currentBuild.result = 'NOT_BUILT'
+                        SKIP_CI = 'true'
+                        manager.addShortText("SKIP_CI")
+                    }
+                    if ("${GIT_BRANCH}" == "main") {
+                        PUSH_IMAGE = 'true'
+                    }
+                } // script
+            }
+        } // Init Params
+
+        stage('git') {
+            steps {
+                container('git') {
+                    sh 'git version'
+                }
+            }
+        } // Bump Version
+
+    } // stages
+
+} // pipeline
