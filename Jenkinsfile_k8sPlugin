@@ -8,7 +8,7 @@ def git_commiter
 def version = 0.0
 
 def cloud_name = "k8s"
-def pod_template = "podTemplates/testoPodTemplate.yaml" 
+def pod_template = "podTemplates/testPodTemplate.yaml" 
 
 // Cred
 def service_account = "jenkins"
